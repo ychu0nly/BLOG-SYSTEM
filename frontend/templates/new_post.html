@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>发布文章</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: 
+                linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.7)),
+                url('https://images.unsplash.com/photo-1517694712202-14dd9538aa97') no-repeat center/cover;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .post-container {
+            width: 550px;
+            padding: 35px 40px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 18px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+            backdrop-filter: blur(12px);
+            animation: fadeIn 0.8s ease;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 26px;
+            background: linear-gradient(135deg, #ffffff, #c4e0ff, #e0d1ff);
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: textGlow 2s infinite alternate;
+        }
+
+        @keyframes textGlow {
+            from { text-shadow: 0 0 4px rgba(255,255,255,0.4); }
+            to   { text-shadow: 0 0 12px rgba(255,255,255,0.9); }
+        }
+
+        label {
+            font-size: 15px;
+            color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            margin-top: 6px;
+            margin-bottom: 18px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            background: rgba(255,255,255,0.8);
+            font-size: 15px;
+            transition: all 0.25s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            background: white;
+            transform: scale(1.02);
+            box-shadow: 0 0 10px rgba(255,255,255,0.6);
+        }
+
+        textarea {
+            resize: none;
+            height: 180px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #89f7fe, #66a6ff);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 17px;
+            cursor: pointer;
+            transition: 0.25s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102,166,255,0.5);
+        }
+
+        /* 右侧悬浮返回按钮 */
+        .back-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 12px 18px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: #333;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            transition: 0.25s;
+        }
+
+        .back-btn:hover {
+            background: white;
+            transform: translateY(-4px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(25px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        #custom-category {
+            display: none;
+        }
+
+        #custom-category.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="post-container">
+        <h2>发布新文章</h2>
+
+        <form method="POST" id="postForm">
+            <label>标题：</label>
+            <input name="title" id="title" required>
+
+            <label>分类：</label>
+            <select name="category" id="categorySelect" required>
+                <option value="tech">技术</option>
+                <option value="life">生活</option>
+                <option value="note">随笔</option>
+                <option value="study">学习</option>
+                <option value="custom">自定义分类</option>
+            </select>
+
+            <div id="custom-category">
+                <label>自定义分类名称：</label>
+                <input type="text" name="custom_category" id="customCategoryInput" placeholder="请输入分类名称">
+            </div>
+
+            <label>内容：</label>
+            <textarea name="content" id="content" required></textarea>
+            <div id="word-count" style="text-align: right; color: #f5f5f5; font-size: 13px; margin-top: -15px; margin-bottom: 10px;">
+                字数：0
+            </div>
+
+            <button type="submit">发布文章</button>
+        </form>
+    </div>
+
+    <a class="back-btn" href="/">返回首页</a>
+
+    <script>
+        const categorySelect = document.getElementById('categorySelect');
+        const customCategoryDiv = document.getElementById('custom-category');
+        const customCategoryInput = document.getElementById('customCategoryInput');
+        const postForm = document.getElementById('postForm');
+
+        // 当选择"自定义分类"时显示输入框
+        categorySelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customCategoryDiv.classList.add('show');
+                customCategoryInput.required = true;
+                categorySelect.required = false; // 自定义分类时不需要select
+            } else {
+                customCategoryDiv.classList.remove('show');
+                customCategoryInput.required = false;
+                categorySelect.required = true;
+                customCategoryInput.value = ''; // 清空自定义分类输入
+            }
+        });
+
+        // 字数统计功能
+        const contentTextarea = document.getElementById('content');
+        const wordCountDiv = document.getElementById('word-count');
+        
+        function updateWordCount() {
+            const text = contentTextarea.value;
+            // 统计字数（去除空格和换行）
+            const wordCount = text.replace(/\s/g, '').length;
+            wordCountDiv.textContent = '字数：' + wordCount;
+        }
+        
+        // 实时更新字数
+        contentTextarea.addEventListener('input', updateWordCount);
+        contentTextarea.addEventListener('paste', function() {
+            setTimeout(updateWordCount, 10);
+        });
+
+        // 表单提交前处理自定义分类、草稿ID和编辑ID
+        let isSubmitting = false; // 标记是否正在提交表单
+        
+        // 获取当前是否是编辑文章模式
+        const urlParams = new URLSearchParams(window.location.search);
+        const editPostId = urlParams.get('edit_id');
+        const editMode = typeof editPostId !== 'undefined' && editPostId !== null;
+        
+        postForm.addEventListener('submit', function(e) {
+            isSubmitting = true; // 标记正在提交，不再提示保存草稿
+            if (categorySelect.value === 'custom') {
+                const customValue = customCategoryInput.value.trim();
+                if (!customValue) {
+                    e.preventDefault();
+                    isSubmitting = false;
+                    alert('请输入自定义分类名称');
+                    return false;
+                }
+                // 禁用select，避免提交"custom"值
+                categorySelect.disabled = true;
+                // 将自定义分类输入框的name改为category，这样后端会读取到正确的值
+                customCategoryInput.name = 'category';
+            } else {
+                // 不是自定义分类时，确保自定义输入框不干扰
+                customCategoryInput.name = 'custom_category';
+            }
+            
+            // 如果是编辑文章，修改表单action添加edit_id参数
+            if (editMode && editPostId) {
+                const formAction = postForm.action || window.location.pathname;
+                postForm.action = formAction + '?edit_id=' + editPostId;
+            }
+            // 如果是编辑草稿，添加隐藏字段传递草稿ID
+            else if (draftId) {
+                const draftIdInput = document.createElement('input');
+                draftIdInput.type = 'hidden';
+                draftIdInput.name = 'draft_id';
+                draftIdInput.value = draftId;
+                postForm.appendChild(draftIdInput);
+            }
+        });
+
+        // 草稿保存功能
+        const titleInput = document.getElementById('title');
+        let hasContent = false;
+
+        // 检测是否有内容输入
+        function checkContent() {
+            const title = titleInput.value.trim();
+            const content = contentTextarea.value.trim();
+            hasContent = content.length > 0; // 只要有内容就标记
+            return hasContent;
+        }
+
+        // 监听输入变化
+        titleInput.addEventListener('input', checkContent);
+        contentTextarea.addEventListener('input', checkContent);
+
+        // 获取当前是否是编辑草稿模式（已在上方定义urlParams）
+        const draftId = urlParams.get('id');
+        
+        // 检查是否是编辑文章模式
+        const isEditMode = typeof editPostId !== 'undefined' && editPostId !== null;
+
+        // 保存草稿函数
+        function saveDraft() {
+            if (!hasContent || isSubmitting || isEditMode) return; // 编辑模式下不保存草稿
+            
+            const title = titleInput.value.trim() || '无标题';
+            const content = contentTextarea.value.trim();
+            let category = categorySelect.value;
+            
+            if (category === 'custom') {
+                category = customCategoryInput.value.trim() || 'tech';
+            }
+
+            if (content) {
+                const data = {
+                    title: title,
+                    content: content,
+                    category: category
+                };
+                
+                // 如果是编辑草稿，添加草稿ID
+                if (draftId) {
+                    data.draft_id = parseInt(draftId);
+                }
+
+                // 使用 sendBeacon API 在页面卸载时也能发送请求
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+                    navigator.sendBeacon('/save_draft', blob);
+                } else {
+                    fetch('/save_draft', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data),
+                        keepalive: true
+                    }).catch(err => console.error('保存草稿失败:', err));
+                }
+            }
+        }
+
+        // 页面离开时提示
+        window.addEventListener('beforeunload', function(e) {
+            if (checkContent() && !isSubmitting && !isEditMode) { // 编辑模式下不提示保存草稿
+                // 先保存草稿
+                saveDraft();
+                // 显示浏览器默认的离开提示
+                e.preventDefault();
+                e.returnValue = '您有未发布的文章内容，是否要保存到草稿箱？';
+                return e.returnValue;
+            }
+        });
+
+        // 返回按钮点击时提示
+        const backBtn = document.querySelector('.back-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', function(e) {
+                if (checkContent() && !isSubmitting && !isEditMode) { // 编辑模式下不提示保存草稿
+                    if (confirm('是否要保存到草稿箱？')) {
+                        saveDraft();
+                        // 延迟跳转，确保请求发送
+                        e.preventDefault();
+                        setTimeout(() => {
+                            window.location.href = isEditMode ? '/profile' : '/';
+                        }, 100);
+                    }
+                } else if (isEditMode) {
+                    // 编辑模式下返回个人中心
+                    e.preventDefault();
+                    window.location.href = '/profile';
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

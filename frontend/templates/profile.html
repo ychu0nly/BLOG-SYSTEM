@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>个人中心</title>
+
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background:
+                linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.75)),
+                url('https://images.unsplash.com/photo-1503264116251-35a269479413') no-repeat center/cover;
+            min-height: 100vh;
+            color: #eee;
+        }}
+
+        .container {{
+            max-width: 1200px;
+            margin: 80px auto;
+            padding: 40px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 20px;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.45);
+            animation: fadeIn 0.8s ease;
+        }}
+
+        .header-section {{
+            text-align: center;
+            margin-bottom: 30px;
+        }}
+
+        h2 {{
+            font-size: 34px;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #ffffff, #d2e6ff, #e7d2ff);
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 8px rgba(255,255,255,0.3);
+            animation: glowTitle 2s infinite alternate;
+        }}
+
+        @keyframes glowTitle {{
+            from {{ text-shadow: 0 0 6px rgba(255,255,255,0.2); }}
+            to {{ text-shadow: 0 0 14px rgba(255,255,255,0.8); }}
+        }}
+
+        .info-box {{
+            background: rgba(255,255,255,0.18);
+            padding: 12px 24px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            box-shadow: inset 0 0 12px rgba(255,255,255,0.25);
+            display: inline-block;
+        }}
+        
+        .info-box p {{
+            margin: 0;
+        }}
+
+        .btn-area {{
+            margin-top: 20px;
+        }}
+
+        .btn-area a {{
+            display: inline-block;
+            margin: 0 10px;
+            padding: 12px 25px;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-weight: bold;
+            color: #333;
+            transition: 0.25s;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+        }}
+
+        .btn-area a:hover {{
+            background: white;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }}
+
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(30px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        /* 左右布局 */
+        .main-content {{
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }}
+
+        .sidebar {{
+            width: 200px;
+            flex-shrink: 0;
+        }}
+
+        .tab-button {{
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            border-left: 4px solid transparent;
+        }}
+
+        .tab-button:hover {{
+            background: rgba(255,255,255,0.25);
+            transform: translateX(5px);
+        }}
+
+        .tab-button.active {{
+            background: rgba(255,255,255,0.3);
+            border-left-color: #ffd700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }}
+
+        .tab-button .count {{
+            float: right;
+            background: rgba(255,255,255,0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }}
+
+        .content-area {{
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px;
+            min-height: 400px;
+        }}
+
+        .content-panel {{
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }}
+
+        .content-panel.active {{
+            display: block;
+        }}
+
+        .content-title {{
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #fff;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }}
+        
+        .favorite-item {{
+            background: rgba(255,255,255,0.15);
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #ffd700;
+        }}
+
+        .favorite-item.draft {{
+            border-left-color: #ff9800;
+        }}
+        
+        .favorite-item:hover {{
+            background: rgba(255,255,255,0.25);
+            transform: translateX(5px);
+        }}
+        
+        .favorite-item h3 {{
+            margin: 0 0 8px 0;
+            font-size: 18px;
+        }}
+        
+        .favorite-item h3 a {{
+            color: #fff;
+            text-decoration: none;
+        }}
+        
+        .favorite-item h3 a:hover {{
+            color: #ffd700;
+            text-decoration: underline;
+        }}
+        
+        .favorite-meta {{
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            margin-top: 8px;
+        }}
+        
+        .no-favorites {{
+            text-align: center;
+            padding: 40px;
+            color: rgba(255,255,255,0.6);
+            font-style: italic;
+        }}
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header-section">
+            <h2>个人中心</h2>
+            <div class="info-box">
+                <p>你好，<strong>{username}</strong></p>
+            </div>
+            <div class="btn-area">
+                <a href="/">返回首页</a>
+                <a href="/logout">退出登录</a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- 左侧标签页 -->
+            <div class="sidebar">
+                <button class="tab-button active" data-tab="posts" onclick="switchTab('posts', this)">
+                    📄 我的文章
+                    <span class="count">{post_count}</span>
+                </button>
+                <button class="tab-button" data-tab="drafts" onclick="switchTab('drafts', this)">
+                    📝 草稿箱
+                    <span class="count">{draft_count}</span>
+                </button>
+                <button class="tab-button" data-tab="favorites" onclick="switchTab('favorites', this)">
+                    ⭐ 收藏夹
+                    <span class="count">{favorite_count}</span>
+                </button>
+            </div>
+
+            <!-- 中间内容区域 -->
+            <div class="content-area">
+                <!-- 我的文章内容 -->
+                <div id="posts-panel" class="content-panel active">
+                    <h3 class="content-title">📄 我的文章 ({post_count})</h3>
+                    {posts_list}
+                </div>
+
+                <!-- 草稿箱内容 -->
+                <div id="drafts-panel" class="content-panel">
+                    <h3 class="content-title">📝 我的草稿箱 ({draft_count})</h3>
+                    {drafts_list}
+                </div>
+
+                <!-- 收藏夹内容 -->
+                <div id="favorites-panel" class="content-panel">
+                    <h3 class="content-title">⭐ 我的收藏 ({favorite_count})</h3>
+                    {favorites_list}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName, buttonElement) {{
+            // 隐藏所有内容面板
+            document.querySelectorAll('.content-panel').forEach(panel => {{
+                panel.classList.remove('active');
+            }});
+            
+            // 移除所有按钮的激活状态
+            document.querySelectorAll('.tab-button').forEach(button => {{
+                button.classList.remove('active');
+            }});
+            
+            // 显示选中的面板
+            document.getElementById(tabName + '-panel').classList.add('active');
+            
+            // 激活对应的按钮
+            buttonElement.classList.add('active');
+        }}
+    </script>
+
+</body>
+</html>

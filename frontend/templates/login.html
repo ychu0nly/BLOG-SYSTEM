@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>登录</title>
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+                        url('https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=1350&q=80') no-repeat center/cover;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+
+        .login-container {{
+            width: 380px;
+            padding: 35px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            backdrop-filter: blur(5px);
+            text-align: center;
+            animation: floatIn 0.8s ease-out;
+        }}
+
+        @keyframes floatIn {{
+            from {{opacity:0; transform: translateY(25px);}} 
+            to {{opacity:1; transform: translateY(0);}} 
+        }}
+
+        h2 {{
+            font-size: 26px;
+            margin-bottom: 20px;
+            color: #333;
+        }}
+
+        input[type="text"],
+        input[type="password"] {{
+            width: 90%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: 0.3s;
+        }}
+
+        input:focus {{
+            border-color: #4a90e2;
+            box-shadow: 0 0 6px rgba(74,144,226,0.4);
+            outline: none;
+        }}
+
+        button {{
+            width: 95%;
+            padding: 12px;
+            background: #4a90e2;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.25s;
+        }}
+
+        button:hover {{
+            background: #3a7dcc;
+            transform: translateY(-2px);
+        }}
+
+        .bottom-text {{
+            margin-top: 15px;
+            font-size: 14px;
+        }}
+
+        a {{
+            text-decoration: none;
+            color: #4a90e2;
+        }}
+
+        a:hover {{
+            text-decoration: underline;
+        }}
+
+        .error {{
+            color: red;
+            margin-bottom: 10px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>欢迎登录</h2>
+        <div class="error">{error}</div>
+        <form method="POST">
+            <input name="username" type="text" placeholder="用户名" required>
+            <input name="password" type="password" placeholder="密码" required>
+            <button type="submit">登录</button>
+        </form>
+        <p class="bottom-text"><a href="/register">没有账号？去注册</a></p>
+    </div>
+</body>
+</html>

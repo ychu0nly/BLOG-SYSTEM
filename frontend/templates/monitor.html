@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统监控面板</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 10px;
+            background: rgba(255,255,255,0.2);
+        }
+        .status-healthy { 
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+        }
+        .status-warning { 
+            background: rgba(245, 158, 11, 0.9);
+            color: white;
+        }
+        .status-critical { 
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+        }
+        .last-update {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.95);
+            color: #667eea;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: rgba(255,255,255,0.98);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            color: #333;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+        .card h3 {
+            font-size: 16px;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        .value {
+            font-size: 42px;
+            font-weight: bold;
+            color: #2d3748;
+            margin: 15px 0;
+        }
+        .unit {
+            font-size: 18px;
+            color: #64748b;
+            margin-left: 5px;
+        }
+        .subtext {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 16px 16px 0 0;
+        }
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .chart-card {
+            background: rgba(255,255,255,0.98);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            color: #333;
+        }
+        .chart-card h3 {
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 16px 16px 0 0;
+        }
+        .error {
+            color: #ef4444;
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            background: white;
+            border-radius: 16px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            justify-content: center;
+            background: rgba(255,255,255,0.15);
+            padding: 10px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .tab {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            color: white;
+        }
+        .tab.active {
+            background: rgba(255,255,255,0.95);
+            color: #667eea;
+            font-weight: 600;
+        }
+        .tab:hover:not(.active) {
+            background: rgba(255,255,255,0.35);
+        }
+        .stats-table {
+            background: rgba(255,255,255,0.98);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            overflow-x: auto;
+            position: relative;
+            color: #333;
+        }
+        .stats-table::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 16px 16px 0 0;
+        }
+        .stats-table h3 {
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+        }
+        tr:hover {
+            background: #f8fafc;
+        }
+        td {
+            color: #334155;
+        }
+        .health-issues {
+            background: rgba(254, 226, 226, 0.95);
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin-top: 25px;
+            border-radius: 0 12px 12px 0;
+            color: #7f1d1d;
+        }
+        .health-issues h4 {
+            color: #dc2626;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .health-issues ul {
+            margin-left: 20px;
+        }
+        .health-issues li {
+            margin-bottom: 6px;
+            padding-left: 10px;
+        }
+        .tab-content {
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .charts {
+                grid-template-columns: 1fr;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .tabs {
+                flex-wrap: wrap;
+            }
+            .value {
+                font-size: 36px;
+            }
+        }
+        .metric-icon {
+            font-size: 20px;
+        }
+        /* 历史数据表格样式 */
+        #historicalData table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #historicalData th, #historicalData td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+        #historicalData th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+        }
+        #historicalData tr:hover {
+            background: #f8fafc;
+        }
+        /* 历史数据容器样式 */
+        #historicalData {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 系统监控面板
+                <span id="systemStatus" class="status-indicator status-healthy">运行正常</span>
+            </h1>
+            <div class="last-update">
+                最后更新: <span id="lastUpdateTime">--:--:--</span> | 
+                运行时间: <span id="uptime">0秒</span>
+            </div>
+        </header>
+
+        <div class="controls">
+            <button onclick="fetchData()">
+                <span>🔄</span> 刷新数据
+            </button>
+            <button onclick="fetchEndpoints()">
+                <span>📊</span> 接口统计
+            </button>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('overview')">核心指标</div>
+            <div class="tab" onclick="switchTab('historical')">历史数据</div>
+        </div>
+
+        <!-- 核心指标标签页 -->
+        <div id="overviewTab" class="tab-content">
+            <div class="grid" id="metricsGrid">
+                <div class="card">
+                    <h3><span class="metric-icon">⏱️</span> 平均响应时间</h3>
+                    <div class="value" id="avgResponseTime">0<span class="unit">ms</span></div>
+                    <div class="subtext">服务器处理请求的平均时间</div>
+                </div>
+                
+                <div class="card">
+                    <h3><span class="metric-icon">✅</span> 请求成功率</h3>
+                    <div class="value" id="successRate">0<span class="unit">%</span></div>
+                    <div class="subtext">成功请求占总请求的比例</div>
+                </div>
+                
+                <div class="card">
+                    <h3><span class="metric-icon">🚀</span> 请求吞吐量</h3>
+                    <div class="value" id="throughput">0<span class="unit">次/分钟</span></div>
+                    <div class="subtext">每分钟处理的请求数量</div>
+                </div>
+                
+                <div class="card">
+                    <h3><span class="metric-icon">🌐</span> 平均网络延迟</h3>
+                    <div class="value" id="avgNetworkLatency">0<span class="unit">ms</span></div>
+                    <div class="subtext">客户端到服务器的网络延迟</div>
+                </div>
+                
+                <div class="card">
+                    <h3><span class="metric-icon">📡</span> 带宽使用</h3>
+                    <div class="value" id="bandwidth">0<span class="unit">bps</span></div>
+                    <div class="subtext">当前网络带宽使用情况</div>
+                </div>
+                
+                <div class="card">
+                    <h3><span class="metric-icon">👥</span> 活跃用户</h3>
+                    <div class="value" id="activeUsers">0</div>
+                    <div class="subtext">当前在线用户数量</div>
+                </div>
+            </div>
+
+            <div class="charts">
+                <div class="chart-card">
+                    <h3>📈 响应时间趋势</h3>
+                    <canvas id="responseTimeChart" height="200"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>📊 吞吐量趋势</h3>
+                    <canvas id="throughputChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 接口统计标签页 -->
+        <div id="endpointsTab" class="tab-content" style="display: none;">
+            <div class="stats-table">
+                <h3>📊 接口性能统计</h3>
+                <table id="endpointsTable">
+                    <thead>
+                        <tr>
+                            <th>接口路径</th>
+                            <th>请求总数</th>
+                            <th>成功率</th>
+                            <th>平均响应时间</th>
+                            <th>平均数据大小</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 历史数据标签页 -->
+        <div id="historicalTab" class="tab-content" style="display: none;">
+            <div class="controls">
+                <button onclick="loadHistoricalData(1)">最近1小时</button>
+                <button onclick="loadHistoricalData(6)">最近6小时</button>
+                <button onclick="loadHistoricalData(24)">最近24小时</button>
+            </div>
+            <div class="stats-table">
+                <h3>📋 历史请求数据</h3>
+                <div id="historicalData"></div>
+            </div>
+        </div>
+
+        <!-- 健康问题展示 -->
+        <div id="healthIssues" class="health-issues" style="display: none;">
+            <h4>⚠️ 系统状态警告</h4>
+            <ul id="issuesList">
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'overview';
+        let responseTimeHistory = [];
+        let throughputHistory = [];
+
+        function drawSimpleChart(canvasId, data, label, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas || !data.length) return;
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            ctx.clearRect(0, 0, width, height);
+            
+            const maxVal = Math.max(...data, 1);
+            const stepX = width / Math.max(data.length - 1, 1);
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, color + '20');
+            gradient.addColorStop(1, color + '05');
+            
+            ctx.beginPath();
+            ctx.moveTo(0, height);
+            for (let i = 0; i < data.length; i++) {
+                const x = i * stepX;
+                const y = height - (data[i] / maxVal) * (height - 40);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.lineTo(width, height);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(0, height);
+            for (let i = 0; i < data.length; i++) {
+                const x = i * stepX;
+                const y = height - (data[i] / maxVal) * (height - 40);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.fillStyle = color;
+            for (let i = 0; i < data.length; i += Math.ceil(data.length / 5)) {
+                const x = i * stepX;
+                const y = height - (data[i] / maxVal) * (height - 40);
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function updateUI(data) {
+            document.getElementById('avgResponseTime').textContent = (data.avg_response_time_ms || 0).toFixed(0);
+            document.getElementById('successRate').textContent = (data.success_rate || 0).toFixed(1);
+            document.getElementById('throughput').textContent = data.throughput_last_minute || 0;
+            document.getElementById('avgNetworkLatency').textContent = (data.avg_network_latency_ms || 0).toFixed(0);
+            document.getElementById('bandwidth').textContent = formatBandwidth(data.current_bandwidth_bps || 0);
+            document.getElementById('activeUsers').textContent = data.active_users || 0;
+
+            responseTimeHistory.push(data.avg_response_time_ms || 0);
+            throughputHistory.push(data.throughput_last_minute || 0);
+            if (responseTimeHistory.length > 15) responseTimeHistory.shift();
+            if (throughputHistory.length > 15) throughputHistory.shift();
+
+            drawSimpleChart('responseTimeChart', responseTimeHistory, '响应时间', '#667eea');
+            drawSimpleChart('throughputChart', throughputHistory, '吞吐量', '#10b981');
+
+            const now = new Date();
+            document.getElementById('lastUpdateTime').textContent = 
+                now.getHours().toString().padStart(2, '0') + ':' +
+                now.getMinutes().toString().padStart(2, '0') + ':' +
+                now.getSeconds().toString().padStart(2, '0');
+            
+            if (data.uptime_formatted) {
+                document.getElementById('uptime').textContent = data.uptime_formatted;
+            }
+        }
+
+        function formatBandwidth(bps) {
+            if (bps >= 1000000) {
+                return (bps / 1000000).toFixed(1) + 'Mbps';
+            } else if (bps >= 1000) {
+                return (bps / 1000).toFixed(1) + 'Kbps';
+            }
+            return bps.toFixed(0) + 'bps';
+        }
+
+        async function fetchData() {
+            try {
+                const res = await fetch('/api/monitoring?action=realtime');
+                const result = await res.json();
+                
+                if (result.success && result.data) {
+                    updateUI(result.data);
+                } else {
+                    showError('获取监控数据失败');
+                }
+            } catch (err) {
+                console.error('获取监控数据失败:', err);
+                showError('无法连接到监控服务');
+            }
+        }
+
+        async function fetchSystemStatus() {
+            try {
+                const res = await fetch('/api/monitoring?action=system_status');
+                const result = await res.json();
+                
+                if (result.success && result.data) {
+                    const status = result.data.status;
+                    const statusElement = document.getElementById('systemStatus');
+                    const issuesContainer = document.getElementById('healthIssues');
+                    const issuesList = document.getElementById('issuesList');
+                    
+                    statusElement.textContent = {
+                        'healthy': '运行正常',
+                        'warning': '需要关注',
+                        'critical': '存在问题'
+                    }[status] || '状态未知';
+                    
+                    statusElement.className = 'status-indicator status-' + status;
+                    
+                    if (result.data.issues && result.data.issues.length > 0) {
+                        issuesList.innerHTML = '';
+                        result.data.issues.forEach(issue => {
+                            const li = document.createElement('li');
+                            li.textContent = issue;
+                            issuesList.appendChild(li);
+                        });
+                        issuesContainer.style.display = 'block';
+                    } else {
+                        issuesContainer.style.display = 'none';
+                    }
+                }
+            } catch (err) {
+                console.error('获取系统状态失败:', err);
+            }
+        }
+
+        async function fetchEndpoints() {
+            try {
+                const res = await fetch('/api/monitoring?action=endpoints&hours=24');
+                const result = await res.json();
+                
+                if (result.success && result.data) {
+                    const tableBody = document.querySelector('#endpointsTable tbody');
+                    tableBody.innerHTML = '';
+                    
+                    Object.entries(result.data).forEach(([endpoint, stats]) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${endpoint}</td>
+                            <td>${stats.count}</td>
+                            <td>${stats.success_rate || 0}%</td>
+                            <td>${stats.avg_time ? stats.avg_time.toFixed(1) : 0}ms</td>
+                            <td>${stats.avg_data_size ? formatBytes(stats.avg_data_size) : '0B'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    
+                    switchTab('endpoints');
+                }
+            } catch (err) {
+                console.error('获取接口统计失败:', err);
+            }
+        }
+
+        // 显示最新的30条
+        async function loadHistoricalData(hours) {
+            try {
+                const res = await fetch(`/api/monitoring?action=historical&hours=${hours}`);
+                const result = await res.json();
+                
+                if (result.success && Array.isArray(result.data)) {
+                    const container = document.getElementById('historicalData');
+                    if (result.data.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: #64748b; padding: 30px;">暂无历史数据</p>';
+                        return;
+                    }
+
+                    // 取最后30条，然后反转使最新在表格顶部
+                    const latestRecords = result.data.slice(-30).reverse();
+
+                    let html = '<table style="width: 100%;"><thead><tr><th>时间</th><th>路径</th><th>方法</th><th>状态码</th><th>响应时间</th><th>数据大小</th></tr></thead><tbody>';
+                    
+                    latestRecords.forEach(record => {
+                        html += `
+                            <tr>
+                                <td>${formatTime(record.timestamp)}</td>
+                                <td>${record.path || '-'}</td>
+                                <td>${record.method || 'GET'}</td>
+                                <td><span style="color: ${record.status_code >= 400 ? '#ef4444' : '#10b981'}">${record.status_code || '-'}</span></td>
+                                <td>${record.response_time_ms ? record.response_time_ms.toFixed(1) + 'ms' : '-'}</td>
+                                <td>${record.data_size ? formatBytes(record.data_size) : '0B'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    
+                    if (result.data.length > 30) {
+                        html += `<p style="text-align: center; color: #64748b; margin-top: 20px; padding: 10px;">仅显示最近30条记录，共${result.data.length}条</p>`;
+                    }
+                    
+                    container.innerHTML = html;
+                    switchTab('historical');
+                }
+            } catch (err) {
+                console.error('加载历史数据失败:', err);
+                document.getElementById('historicalData').innerHTML = '<p style="text-align: center; color: #ef4444; padding: 30px;">加载历史数据失败</p>';
+            }
+        }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                if (tab.textContent === getTabText(tabName)) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+        }
+
+        function getTabText(tabName) {
+            const tabMap = {
+                'overview': '核心指标',
+                'endpoints': '接口统计',
+                'historical': '历史数据'
+            };
+            return tabMap[tabName] || tabName;
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + sizes[i];
+        }
+
+        function showError(message) {
+            const grid = document.getElementById('metricsGrid');
+            grid.innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+            fetchSystemStatus();
+            setInterval(fetchData, 3000);
+            setInterval(fetchSystemStatus, 5000);
+        });
+    </script>
+</body>
+</html>

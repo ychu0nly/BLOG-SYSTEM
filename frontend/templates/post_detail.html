@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>{title}</title>
+
+    <!-- 引入 marked.js 用于渲染 AI 的 Markdown 回复 -->
+    <script src="/static/js/marked.min.js"></script>
+
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background:
+                linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.75)),
+                url('https://images.unsplash.com/photo-1507842217343-583bb7270b66') no-repeat center/cover;
+            min-height: 100vh;
+            color: #eee;
+        }}
+
+        /* 导航栏样式 */
+        .top-nav {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }}
+
+        .top-nav p {{
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+        }}
+
+        .top-nav a {{
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 500;
+        }}
+
+        .top-nav a:hover {{
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }}
+
+        .top-nav .welcome {{
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }}
+
+        .container {{
+            max-width: 850px;
+            margin: 80px auto 60px;
+            padding: 40px;
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.35);
+            animation: fadeIn 0.8s ease;
+            position: relative;
+        }}
+
+        h1 {{
+            font-size: 36px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffffff, #c4e0ff, #e0d1ff);
+            -webkit-background-clip: text;
+            color: transparent;
+            text-align: center;
+            animation: glow 2s infinite alternate;
+        }}
+
+        @keyframes glow {{
+            from {{ text-shadow: 0 0 4px rgba(255,255,255,0.2); }}
+            to   {{ text-shadow: 0 0 14px rgba(255,255,255,0.85); }}
+        }}
+
+        .meta-info {{
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 15px;
+            color: #e2e2e2;
+            position: relative;
+        }}
+
+        .meta-info span {{
+            margin: 0 8px;
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 12px;
+        }}
+
+        /* AI 图标放在 meta-info 右侧 */
+        .ai-trigger {{
+            position: absolute;
+            top: -80px;
+            right: 80px;
+            width: 50px;
+            height: 60px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }}
+
+        .ai-trigger:hover {{
+            transform: scale(1.1);
+        }}
+
+        hr {{
+            border: 0;
+            height: 1px;
+            background: rgba(255,255,255,0.25);
+            margin: 25px 0;
+        }}
+
+        .content {{
+            font-size: 18px;
+            line-height: 1.8;
+            color: #f6f6f6;
+            white-space: pre-wrap;
+        }}
+
+        .back-btn {{
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 12px 20px;
+            border-radius: 28px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            transition: 0.25s;
+            z-index: 999;
+        }}
+
+        .back-btn:hover {{
+            background: white;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }}
+
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(25px); }}
+            to   {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        /* 侧边栏对话样式 */
+        #ai-response {{
+            color: #e0e0ff;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-top: 10px;
+            max-height: calc(100% - 180px);
+            overflow-y: auto;
+            padding-right: 8px;
+        }}
+
+        .message {{
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .message.ai {{
+            align-items: flex-start;
+        }}
+
+        .message.user {{
+            align-items: flex-end;
+        }}
+
+        .message strong {{
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: #a0d0ff;
+        }}
+
+        .message-content {{
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-break: break-word;
+        }}
+
+        .message.ai .message-content {{
+            background: rgba(50, 50, 70, 0.6);
+            color: #e0e0ff;
+            text-align: left;
+        }}
+
+        .message.user .message-content {{
+            background: rgba(80, 150, 255, 0.3);
+            color: #fff;
+            text-align: left;
+        }}
+
+        /* 输入区域 */
+        .input-area {{
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            width: 100%;
+        }}
+
+        #aiQuestion {{
+            flex: 1;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #555;
+            background: #2a2a35;
+            color: white;
+            outline: none;
+        }}
+
+        .send-btn {{
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #64c8ff;
+            border: none;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }}
+
+        .send-btn:hover {{
+            background: #4db8ff;
+        }}
+        
+        /* 点赞和收藏按钮容器样式 */
+        .like-section, .favorite-section {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 10px;
+        }}
+        
+        /* 点赞按钮样式 */
+        .like-btn {{
+            background: #e0e0e0;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }}
+        
+        .like-btn.liked {{
+            background: #ff6b6b;
+            color: white;
+        }}
+        
+        .like-count {{
+            font-size: 14px;
+            color: #ccc;
+            display: inline-flex;
+            align-items: center;
+        }}
+        
+        /* 收藏按钮样式 */
+        .favorite-btn {{
+            background: #e0e0e0;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }}
+        
+        .favorite-btn.favorited {{
+            background: #ffd700;
+            color: #333;
+        }}
+        
+        .favorite-count {{
+            font-size: 14px;
+            color: #ccc;
+            display: inline-flex;
+            align-items: center;
+        }}
+        
+        /* 评论区域样式 */
+        .comments-section {{
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }}
+        
+        .comments-title {{
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #fff;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }}
+        
+        .comment-form {{
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }}
+        
+        .comment-form textarea {{
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 12px;
+        }}
+        
+        .comment-form textarea:focus {{
+            outline: none;
+            border-color: #66a6ff;
+            background: white;
+        }}
+        
+        .comment-submit-btn {{
+            background: linear-gradient(135deg, #66a6ff, #89f7fe);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }}
+        
+        .comment-submit-btn:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,166,255,0.4);
+        }}
+        
+        .comment-submit-btn:disabled {{
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }}
+        
+        .comments-list {{
+            margin-top: 20px;
+        }}
+        
+        .comment-item {{
+            background: rgba(255,255,255,0.1);
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            border-left: 3px solid #66a6ff;
+            transition: all 0.3s ease;
+        }}
+        
+        .comment-item:hover {{
+            background: rgba(255,255,255,0.15);
+            transform: translateX(5px);
+        }}
+        
+        .comment-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }}
+        
+        .comment-author {{
+            color: #66a6ff;
+            font-size: 16px;
+        }}
+        
+        .comment-time {{
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+        }}
+        
+        .comment-content {{
+            color: rgba(255,255,255,0.9);
+            line-height: 1.6;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }}
+        
+        .comment-actions {{
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }}
+        
+        .comment-like-btn, .comment-reply-btn {{
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.9);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }}
+        
+        .comment-like-btn:hover, .comment-reply-btn:hover {{
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }}
+        
+        .comment-like-btn.liked {{
+            background: rgba(255,107,107,0.3);
+            border-color: rgba(255,107,107,0.5);
+            color: #ff6b6b;
+        }}
+        
+        .reply-count {{
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+            margin-left: auto;
+        }}
+        
+        .comment-reply {{
+            border-left: 3px solid rgba(102,166,255,0.5);
+            padding-left: 15px;
+            margin-left: 20px;
+        }}
+        
+        .reply-form-container {{
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }}
+        
+        .reply-textarea {{
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 10px;
+        }}
+        
+        .reply-textarea:focus {{
+            outline: none;
+            border-color: #66a6ff;
+            background: white;
+        }}
+        
+        .reply-buttons {{
+            display: flex;
+            gap: 10px;
+        }}
+        
+        .reply-submit-btn, .reply-cancel-btn {{
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }}
+        
+        .reply-submit-btn {{
+            background: linear-gradient(135deg, #66a6ff, #89f7fe);
+            color: white;
+        }}
+        
+        .reply-submit-btn:hover {{
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102,166,255,0.3);
+        }}
+        
+        .reply-cancel-btn {{
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.9);
+        }}
+        
+        .reply-cancel-btn:hover {{
+            background: rgba(255,255,255,0.2);
+        }}
+        
+        .replies-list {{
+            margin-top: 15px;
+        }}
+        
+        .no-comments {{
+            text-align: center;
+            padding: 40px;
+            color: rgba(255,255,255,0.6);
+            font-style: italic;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }}
+    </style>
+</head>
+
+<body>
+
+{nav}
+
+<div class="container">
+    <h1>{title}</h1>
+
+    <div class="meta-info">
+        <span>作者: {author}</span>
+        <span>分类: {category}</span>
+        <span>时间: {timestamp}</span>
+        <span>阅读量: {views}</span>
+        <span>字数: {word_count}</span>
+        <span>预计阅读时间: {reading_time} 分钟</span>
+        <!-- AI 助手图标放在 meta-info 右侧 -->
+        <img src="/static/images/robot.png" alt="AI助手" class="ai-trigger" onclick="toggleSidebar()">
+    </div>
+
+    <hr>
+
+    <div class="content">{content}</div>
+
+    <!-- 点赞功能 -->
+    {like_button}
+
+    <!-- 收藏功能 -->
+    {favorite_button}
+
+    <!-- 评论区域 -->
+    <div class="comments-section">
+        <h3 class="comments-title">💬 评论 ({comment_count})</h3>
+        
+        <!-- 添加评论表单 -->
+        <div class="comment-form">
+            <textarea id="comment-content" placeholder="写下你的评论..." rows="4"></textarea>
+            <button class="comment-submit-btn" id="comment-submit-btn" onclick="submitComment()">发表评论</button>
+        </div>
+        
+        <!-- 评论列表 -->
+        <div class="comments-list" id="comments-list">
+            {comments_list}
+        </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center;">
+        <a href="/" style="color:#fff; text-decoration:underline;">返回首页</a>
+    </p>
+</div>
+
+<!-- 侧边栏 -->
+<aside id="sidebar" style="display:none; position:fixed; top:0; right:0; width:350px; height:100%; background:rgba(30,30,40,0.95); border-left:2px solid #ccc; z-index:1000; padding:20px; box-sizing:border-box;">
+    <img src="/static/images/robot.png" alt="AI" style="width:40px; display:block; margin-bottom:10px;">
+    <h2 style="color:#a0d0ff; margin-top:0;">AI 阅读助手</h2>
+    <button onclick="toggleSidebar()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:24px; cursor:pointer;">×</button>
+    
+    <div id="ai-response">
+        正在生成回复...
+    </div>
+
+    <!-- 输入区 -->
+    <div style="position:absolute; bottom:20px; left:20px; right:20px;">
+        <div class="input-area">
+            <input type="text" id="aiQuestion" placeholder="问 AI 关于本文的问题..." 
+                   style="width:100%;">
+            <button class="send-btn" onclick="sendQuestion()">➤</button>
+        </div>
+    </div>
+
+    <div style="margin-top:auto; text-align:center; color:#888; font-size:12px; margin-bottom:10px;">
+        © 2025 我的个人博客
+    </div>
+</aside>
+
+<a class="back-btn" href="/">返回首页</a>
+
+<script>
+    // 对话历史，用于多轮交互
+    let conversationHistory = [];
+
+    function toggleSidebar() {{
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar.style.display === 'none' || sidebar.style.display === '') {{
+            sidebar.style.display = 'block';
+            // 首次打开时自动分析全文
+            if (document.getElementById('ai-response').innerText.trim() === '正在生成回复...') {{
+                analyzeArticle();
+            }}
+        }} else {{
+            sidebar.style.display = 'none';
+        }}
+    }}
+
+    async function analyzeArticle() {{
+        const responseDiv = document.getElementById('ai-response');
+        try {{
+            const res = await fetch('/ai_assist', {{
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }},
+                body: JSON.stringify({{
+                    text: {raw_content_json},
+                    conversation: []
+                }})
+            }});
+            const data = await res.json();
+            const aiMsg = data.analysis || 'AI 暂无摘要。';
+            conversationHistory = [{{ role: "assistant", content: aiMsg }}];
+            
+            // 渲染 AI 消息
+            const rendered = marked.parse(aiMsg);
+            responseDiv.innerHTML = `<div class="message ai"><strong>AI</strong><div class="message-content">${{rendered}}</div></div>`;
+        }} catch (err) {{
+            responseDiv.innerHTML = '<div class="message ai"><strong>AI</strong><div class="message-content">AI 分析失败，请重试。</div></div>';
+        }}
+    }}
+
+    async function sendQuestion() {{
+        const input = document.getElementById('aiQuestion');
+        const question = input.value.trim();
+        if (!question) return;
+
+        const responseDiv = document.getElementById('ai-response');
+
+        // 显示用户消息
+        const userHtml = `<div class="message user"><strong>用户</strong><div class="message-content">${{question.replace(/</g, '&lt;').replace(/>/g, '&gt;')}}</div></div>`;
+        responseDiv.innerHTML += userHtml;
+        conversationHistory.push({{ role: "user", content: question }});
+
+        // 添加“思考中”
+        responseDiv.innerHTML += `<div class="message ai"><em>AI 正在思考...</em></div>`;
+        responseDiv.scrollTop = responseDiv.scrollHeight;
+        input.value = '';
+
+        try {{
+            const res = await fetch('/ai_assist', {{
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }},
+                body: JSON.stringify({{
+                    text: {raw_content_json},
+                    conversation: conversationHistory
+                }})
+            }});
+            const data = await res.json();
+            const answer = data.analysis || 'AI 未响应。';
+
+            // 替换“思考中”为真实回答
+            const lastMessage = responseDiv.lastElementChild;
+            if (lastMessage && lastMessage.querySelector('em')) {{
+                const renderedAnswer = marked.parse(answer);
+                lastMessage.outerHTML = `<div class="message ai"><strong>AI</strong><div class="message-content">${{renderedAnswer}}</div></div>`;
+            }}
+
+            responseDiv.scrollTop = responseDiv.scrollHeight;
+            conversationHistory.push({{ role: "assistant", content: answer }});
+        }} catch (err) {{
+            const lastMessage = responseDiv.lastElementChild;
+            if (lastMessage && lastMessage.querySelector('em')) {{
+                lastMessage.outerHTML = `<div class="message ai"><div class="message-content">请求失败，请重试。</div></div>`;
+            }}
+        }}
+    }}
+
+    // 支持 Enter 发送
+    document.getElementById('aiQuestion').addEventListener('keydown', function(e) {{
+        if (e.key === 'Enter') {{
+            sendQuestion();
+        }}
+    }});
+</script>
+
+</body>
+</html>

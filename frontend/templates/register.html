@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>注册</title>
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background:
+                linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.75)),
+                url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1350&q=80') no-repeat center/cover;
+            min-height: 100vh;
+            color: #eee;
+        }}
+
+        .container {{
+            max-width: 450px;
+            margin: 90px auto;
+            padding: 40px 32px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 20px;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.45);
+            animation: fadeIn 0.8s ease;
+            text-align: center;
+        }}
+
+        h2 {{
+            font-size: 34px;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #ffffff, #e9f1ff, #efd9ff);
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 8px rgba(255,255,255,0.3);
+            animation: glowTitle 2s infinite alternate;
+        }}
+
+        @keyframes glowTitle {{
+            from {{ text-shadow: 0 0 6px rgba(255,255,255,0.2); }}
+            to {{ text-shadow: 0 0 14px rgba(255,255,255,0.8); }}
+        }}
+
+        label {{
+            display: block;
+            text-align: left;
+            margin: 8px 0 6px;
+            font-size: 15px;
+            opacity: 0.9;
+        }}
+
+        .input-field {{
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: none;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.85);
+            font-size: 15px;
+        }}
+
+        .input-field:focus {{
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.7);
+        }}
+
+        .btn-primary {{
+            margin-top: 10px;
+            width: 100%;
+            padding: 12px 0;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.92);
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+        }}
+
+        .btn-primary:hover {{
+            background: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }}
+
+        .switch-link {{
+            margin-top: 20px;
+            opacity: 0.9;
+        }}
+
+        .switch-link a {{
+            color: #fff;
+            text-decoration: underline;
+        }}
+
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(30px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        .error-box {{
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 80, 80, 0.28);
+            border-radius: 10px;
+            color: #ffdddd;
+            font-size: 14px;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
+        }}
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>注册</h2>
+
+        {error}
+
+        <form method="POST" class="auth-form">
+
+            <label>用户名</label>
+            <input name="username" required class="input-field" />
+
+            <label>密码</label>
+            <input name="password" type="password" required class="input-field" />
+
+            <button type="submit" class="btn-primary">注册</button>
+        </form>
+
+        <p class="switch-link">
+            已有账号？<a href="/login">去登录</a>
+        </p>
+    </div>
+
+</body>
+</html>
